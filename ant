@@ -1,0 +1,56 @@
+-- Настройки
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local TRACKER_URL = "https://stats.ily123950950.workers.dev/track"
+
+-- Функция для отправки событий
+local function sendEvent(eventType)
+    local payload = {
+        event = eventType, -- "join" или "leave"
+        userId = player.UserId,
+        username = player.Name,
+        jobId = game.JobId,
+        placeId = game.PlaceId,
+        time = os.time()
+    }
+
+    local jsonData = HttpService:JSONEncode(payload)
+    local requestFunc = (syn and syn.request)
+        or (http and http.request)
+        or http_request
+        or request
+
+    if requestFunc then
+        pcall(function()
+            requestFunc({
+                Url = TRACKER_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = jsonData
+            })
+        end)
+    else
+        warn("HTTP-запросы недоступны в этом окружении!")
+    end
+end
+
+-- Отправляем событие входа
+sendEvent("join")
+
+-- Событие выхода игрока
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+    if leavingPlayer == player then
+        sendEvent("leave")
+    end
+end)
+
+-- Резервный способ — если игрок удаляется из иерархии
+player.AncestryChanged:Connect(function(_, parent)
+    if not parent then
+        sendEvent("leave")
+    end
+end)
