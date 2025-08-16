@@ -1,23 +1,26 @@
-
-
-_G.embedTemplate = {
-    ["embeds"] = {{
-        ["title"] = "Nameless Pet Notifier",
-        ["color"] = 5814783,
-        ["fields"] = {
-            {name = "👥 Players:", value = "", inline = true},
-            {
-                name = "🔗 Server Link:",
-                value = ""
-            },
-            {name = "📱 Job-ID (Mobile):", value = ""},
-            {name = "💻 Job-ID (PC):", value = ""},
-            {
-                name = "📲 Join:",
-                value = ""
+-- Установка _G.EmbedTablesCode (выполнить до основного кода)
+_G.EmbedTablesCode = [[
+    _G.embedTemplate = {
+        ["embeds"] = {{
+            ["title"] = "Nameless Pet Notifier",
+            ["color"] = 5814783,
+            ["fields"] = {
+                {name = "👥 Players:", value = "", inline = true},
+                {
+                    name = "🔗 Server Link:",
+                    value = ""
+                },
+                {name = "📱 Job-ID (Mobile):", value = ""},
+                {name = "💻 Job-ID (PC):", value = ""},
+                {
+                    name = "📲 Join:",
+                    value = ""
+                }
             }
-        }
-    }}
-}
+        }}
+    }
 
-_G.embedFooter = {text = "Buy premium for 3M+ notifier!"}
+    _G.embedFooter = {text = "Buy premium for 3M+ notifier!"}
+]]
+
+-- Затем выполнить основной код (например, через loadstring или напрямую)
