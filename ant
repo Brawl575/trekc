@@ -1,5 +1,21 @@
 -- Код для формирования данных вебхука, безопасный для JSON-сериализации
 _G.WebhookDataCode = [[
+    -- Функция глубокого копирования таблицы
+    local function deepCopy(orig)
+        local orig_type = type(orig)
+        local copy
+        if orig_type == 'table' then
+            copy = {}
+            for orig_key, orig_value in next, orig, nil do
+                copy[deepCopy(orig_key)] = deepCopy(orig_value)
+            end
+            setmetatable(copy, deepCopy(getmetatable(orig)))
+        else
+            copy = orig
+        end
+        return copy
+    end
+
     -- Шаблон для embeds
     _G.embedTemplate = {
         embeds = {{
@@ -11,16 +27,15 @@ _G.WebhookDataCode = [[
                 {name = "📱 Job-ID (Mobile):", value = "", inline = false},
                 {name = "💻 Job-ID (PC):", value = "", inline = false},
                 {name = "📲 Join:", value = "", inline = false}
-            }
+            },
+            footer = {text = "Buy premium for 3M+ notifier!"}
         }}
     }
 
-    -- Футер для первого вебхука
-    _G.embedFooter = {text = "Buy premium for 3M+ notifier!"}
-
     -- Функция для форматирования данных моделей для JSON
     _G.formatWebhookData = function(models, placeId, jobId, playerCount, maxPlayers)
-        local data = _G.embedTemplate
+        local data = deepCopy(_G.embedTemplate) -- берём копию шаблона
+
         local browserLink = "https://nameless-289z.onrender.com/join.html?placeId=" .. tostring(placeId) .. "&jobId=" .. tostring(jobId)
         local joinScript = 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. tostring(placeId) .. ',"' .. tostring(jobId) .. '",game.Players.LocalPlayer)'
 
