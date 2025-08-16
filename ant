@@ -1,163 +1,23 @@
-local WebhookModule = {}
 
-local HttpService = game:GetService("HttpService")
 
--- Функция для запроса временного токена
-function WebhookModule.requestToken(webhookUrl)
-    local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
-    if not requestFunc then return nil end
-    
-    local tokenRequestData = HttpService:JSONEncode({
-        action = "get_token",
-        key = _G.STATIC_TOKEN_KEY or "37hfo7tfgn8194fnc82gjw" -- Fallback key
-    })
-    
-    local success, response = pcall(function()
-        return requestFunc({
-            Url = webhookUrl,
-            Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
+_G.embedTemplate = {
+    ["embeds"] = {{
+        ["title"] = "Nameless Pet Notifier",
+        ["color"] = 5814783,
+        ["fields"] = {
+            {name = "👥 Players:", value = "", inline = true},
+            {
+                name = "🔗 Server Link:",
+                value = ""
             },
-            Body = tokenRequestData
-        })
-    end)
-    
-    if success and response.StatusCode == 200 then
-        local body = HttpService:JSONDecode(response.Body)
-        return body.token
-    end
-    
-    return nil
-end
-
-function WebhookModule.sendDiscordWebhook(models, webhookUrl, isThirdWebhook, hasHighGeneration)
-    -- Не отправлять вебхуки если любая из папок существует
-    if _G.folderExists or _G.alreadyHereFolderExists then 
-        return 
-    end
-    
-    models = tostring(models or "Unknown models")
-    local placeId = game.PlaceId
-    local jobId = game.JobId
-    local browserLink = "https://nameless-289z.onrender.com/join.html?placeId=" .. placeId .. "&jobId=" .. jobId
-    local playerCount = #game:GetService("Players"):GetPlayers()
-    local maxPlayers = game:GetService("Players").MaxPlayers
-
-    if playerCount <= 0 then
-        return
-    end
-
-    if isThirdWebhook then
-        local modelEntries = {}
-        for entry in models:gmatch("[^,]+") do
-            local trimmed = entry:match("^%s*(.-)%s*$")
-            local displayName, generation, mutation, rarity = trimmed:match("(.+)%s*Generation:%s*([^%s]+)%s*Mutation:%s*([^%s]+)%s*Rarity:%s*(.+)")
-            if displayName then
-                table.insert(modelEntries, string.format("%s, %s, %s, %s", displayName, rarity, generation, mutation))
-            else
-                table.insert(modelEntries, trimmed)
-            end
-        end
-        local formattedModels = table.concat(modelEntries, ", ")
-        local message = "-- Models found: " .. formattedModels .. "\n" ..
-                        "Join server: <" .. browserLink .. ">\n"
-        local encodedMessage = HttpService:UrlEncode(message)
-        local url = webhookUrl .. encodedMessage
-        local success, result = pcall(function()
-            return game:HttpGet(url)
-        end)
-    else
-        -- Запрашиваем токен перед отправкой
-        local token = WebhookModule.requestToken(webhookUrl)
-        if not token then
-            warn("Failed to get token for webhook: " .. webhookUrl)
-            return
-        end
-
-        local joinScript = 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. placeId .. ',"' .. jobId .. '",game.Players.LocalPlayer)'
-
-        -- Определяем цвет на основе генерации (для второго вебхука)
-        local embedColor = 5814783 -- Стандартный цвет
-        if webhookUrl == _G.SPECIAL_WEBHOOK_URL and hasHighGeneration then
-            embedColor = 16711680 -- Красный цвет (RGB: 255, 0, 0) для высокой генерации
-        end
-
-        local data = {
-            ["embeds"] = {{
-                ["title"] = "Nameless Pet Notifier",
-                ["color"] = embedColor,
-                ["fields"] = {
-                    {name = "👥 Players:", value = tostring(playerCount) .. "/" .. tostring(maxPlayers), inline = true},
-                    {
-                        name = "🔗 Server Link:",
-                        value = "[Join Server](" .. browserLink .. ")"
-                    },
-                    {name = "📱 Job-ID (Mobile):", value = "" .. jobId .. ""},
-                    {name = "💻 Job-ID (PC):", value = "" .. jobId .. ""},
-                    {
-                        name = "📲 Join:",
-                        value = "`" .. joinScript .. "`"
-                    }
-                }
-            }},
-            ["token"] = token  -- Добавляем токен в тело запроса
+            {name = "📱 Job-ID (Mobile):", value = ""},
+            {name = "💻 Job-ID (PC):", value = ""},
+            {
+                name = "📲 Join:",
+                value = ""
+            }
         }
-        
-        -- Add footer ТОЛЬКО для первого вебхука (WEBHOOK_WORKER_URL)
-        if webhookUrl == _G.WEBHOOK_WORKER_URL then
-            data.embeds[1].footer = {text = "Buy premium for 3M+ notifier!"}
-        end
+    }}
+}
 
-        local names = {}
-        local mutations = {}
-        local rarities = {}
-        local generations = {}
-        local mutationCounts = {}
-        local rarityCounts = {}
-
-        for entry in models:gmatch("[^,]+") do
-            local trimmed = entry:match("^%s*(.-)%s*$")
-            local displayName, generation, mutation, rarity = trimmed:match("(.+)%s*Generation:%s*([^%s]+)%s*Mutation:%s*([^%s]+)%s*Rarity:%s*(.+)")
-            if displayName then
-                table.insert(generations, generation or "Unknown")
-                mutationCounts[mutation] = (mutationCounts[mutation] or 0) + 1
-                rarityCounts[rarity] = (rarityCounts[rarity] or 0) + 1
-                table.insert(names, displayName)
-            end
-        end
-
-        local formattedMutations = {}
-        for mutation, count in pairs(mutationCounts) do
-            table.insert(formattedMutations, count > 1 and mutation .. " x" .. count or mutation)
-        end
-        local formattedRarities = {}
-        for rarity, count in pairs(rarityCounts) do
-            table.insert(formattedRarities, count > 1 and rarity .. " x" .. count or rarity)
-        end
-
-        if #names > 0 then
-            table.insert(data.embeds[1].fields, 1, {name = "🪙 Name:", value = table.concat(names, ", "), inline = true})
-        end
-        if #generations > 0 then
-            table.insert(data.embeds[1].fields, 2, {name = "📈 Generation:", value = table.concat(generations, ", "), inline = true})
-        end
-
-        local jsonData = HttpService:JSONEncode(data)
-        local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
-        if requestFunc then
-            local success, result = pcall(function()
-                return requestFunc({
-                    Url = webhookUrl,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = jsonData
-                })
-            end)
-        end
-    end
-end
-
-return WebhookModule
+_G.embedFooter = {text = "Buy premium for 3M+ notifier!"}
