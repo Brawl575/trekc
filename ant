@@ -20,7 +20,7 @@ _G.WebhookDataCode = [[
     _G.embedTemplate = {
         embeds = {{
             title = "Nameless Pet Notifier",
-            color = 5814783,
+            color = 6591981,
             fields = {
                 {name = "👥 Players:", value = "", inline = true},
                 {name = "🔗 Server Link:", value = "", inline = false},
