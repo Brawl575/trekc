@@ -42,7 +42,7 @@ _G.formatWebhookData = function(models, placeId, jobId, playerCount, maxPlayers)
     data.embeds[1].fields[1].value = tostring(playerCount) .. "/" .. tostring(maxPlayers)    
     data.embeds[1].fields[2].value = "[Join Server](" .. browserLink .. ")"    
     data.embeds[1].fields[3].value = tostring(jobId)    
-    data.embeds[1].fields[4].value = "```" .. tostring(jobId) .. "```"   -- <<< добавил обрамление в ```
+    data.embeds[1].fields[4].value = "`" .. tostring(jobId) .. "`"   -- <<< добавил обрамление в ```
     data.embeds[1].fields[5].value = "`" .. joinScript .. "`"    
 
         
