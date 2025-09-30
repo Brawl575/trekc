@@ -79,12 +79,6 @@ _G.formatWebhookData = function(models, placeId, jobId, playerCount, maxPlayers)
     if #generations > 0 then    
         table.insert(data.embeds[1].fields, 2, {name = "📈 Generation:", value = table.concat(generations, ", "), inline = true})    
     end    
-
-   
-    if #names > 0 then    
-        data.embeds[1].description = "Found " .. #names .. " pet(s): " .. table.concat(names, ", ")    
-    end    
-
     return data    
 end
 ]]
